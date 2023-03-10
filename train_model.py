@@ -5,6 +5,8 @@ import attack_util
 from attack_util import ctx_noparamgrad
 from torch.utils.tensorboard import SummaryWriter
 
+from tqdm import tqdm
+
 
 class ModelTrainer():
     def __init__(self, model:Module, adv_gen, trainloader, lr, optimizer, device = 'cpu') -> None:
@@ -27,12 +29,15 @@ class ModelTrainer():
             self.optimizer = SGD(model.parameters(), lr=lr)
         elif optimizer.lower() == 'adam':
             self.optimizer = Adam(model.parameters(), lr=lr)
+    
+    def save_model(self, save_dir:str):
+        torch.save(self.model.state_dict(), save_dir)
 
     def train(self, epochs, valloader = None, log_dir:str=None):
         tb_writer = None
         if log_dir:
             tb_writer = SummaryWriter(log_dir=log_dir)
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs)):
             epoch_loss = 0
             for data, i in enumerate(self.trainloader):
                 inputs, labels = data
@@ -88,3 +93,4 @@ class ModelTrainer():
                 robust_correct_num += torch.sum(torch.argmax(predictions, dim = -1) == labels).item()
         
         return clean_correct_num/total_size, robust_correct_num/total_size
+    
