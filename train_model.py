@@ -27,7 +27,7 @@ class ModelTrainer():
         elif optimizer.lower() == 'adam':
             self.optimizer = Adam(model.parameters(), lr=lr)
 
-    def train(self, epochs):
+    def train(self, epochs, valloader = None):
         for epoch in range(epochs):
             for data, i in enumerate(self.trainloader):
                 inputs, labels = data
@@ -46,6 +46,10 @@ class ModelTrainer():
 
                 loss.backwards()
                 self.optimizer.step()
+            
+            # Validate model, if valloader provided
+            if valloader:
+                clean_accuracy, robust_accuracy = self.test_model_accuracy(valloader)
 
     def test_model_accuracy(self, testloader):
         total_size = 0
