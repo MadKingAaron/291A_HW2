@@ -33,6 +33,7 @@ class ModelTrainer():
         if log_dir:
             tb_writer = SummaryWriter(log_dir=log_dir)
         for epoch in range(epochs):
+            epoch_loss = 0
             for data, i in enumerate(self.trainloader):
                 inputs, labels = data
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
@@ -47,6 +48,7 @@ class ModelTrainer():
                 preds = self.model(inputs_hat)
 
                 loss = self.loss_func(preds, labels)
+                epoch_loss += loss.item()
 
                 loss.backwards()
                 self.optimizer.step()
@@ -55,6 +57,7 @@ class ModelTrainer():
             if valloader:
                 clean_accuracy, robust_accuracy = self.test_model_accuracy(valloader)
                 if tb_writer:
+                    tb_writer.add_scalar("Loss/train", epoch_loss, loss)
                     tb_writer.add_scalar("CleanAccuracy/train", clean_accuracy, epoch)
                     tb_writer.add_scalar("RobustAccuracy/train", robust_accuracy, epoch)
         
