@@ -3,6 +3,7 @@ from torch.optim import SGD, Adam
 from torch.nn import CrossEntropyLoss, Module
 import attack_util
 from attack_util import ctx_noparamgrad
+from torch.utils.tensorboard import SummaryWriter
 
 
 class ModelTrainer():
@@ -27,7 +28,10 @@ class ModelTrainer():
         elif optimizer.lower() == 'adam':
             self.optimizer = Adam(model.parameters(), lr=lr)
 
-    def train(self, epochs, valloader = None):
+    def train(self, epochs, valloader = None, log_dir:str=None):
+        tb_writer = None
+        if log_dir:
+            tb_writer = SummaryWriter(log_dir=log_dir)
         for epoch in range(epochs):
             for data, i in enumerate(self.trainloader):
                 inputs, labels = data
@@ -50,6 +54,13 @@ class ModelTrainer():
             # Validate model, if valloader provided
             if valloader:
                 clean_accuracy, robust_accuracy = self.test_model_accuracy(valloader)
+                if tb_writer:
+                    tb_writer.add_scalar("CleanAccuracy/train", clean_accuracy, epoch)
+                    tb_writer.add_scalar("RobustAccuracy/train", robust_accuracy, epoch)
+        
+        if tb_writer:
+            tb_writer.flush()
+            tb_writer.close()
 
     def test_model_accuracy(self, testloader):
         total_size = 0
