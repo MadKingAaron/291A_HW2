@@ -36,10 +36,9 @@ class ModelTrainer():
                 self.optimizer.zero_grad()
 
                 delta = self.adv_gen.perturb(self.model, inputs, labels)
+                inputs_hat = inputs + delta
 
                 self.optimizer.zero_grad()
-
-                inputs_hat = inputs + delta
 
                 preds = self.model(inputs_hat)
 
