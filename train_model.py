@@ -55,7 +55,7 @@ class ModelTrainer():
                 loss = self.train_loss(preds, labels)
                 epoch_loss += loss.item()
 
-                loss.backwards()
+                loss.backward()
                 self.optimizer.step()
             
             # Validate model, if valloader provided
