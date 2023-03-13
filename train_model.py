@@ -39,7 +39,7 @@ class ModelTrainer():
             tb_writer = SummaryWriter(log_dir=log_dir)
         for epoch in tqdm(range(epochs)):
             epoch_loss = 0
-            for data, i in enumerate(self.trainloader):
+            for i, data in enumerate(self.trainloader):
                 inputs, labels = data
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
