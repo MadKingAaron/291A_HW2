@@ -78,7 +78,7 @@ def main():
             attack_step=args.attack_step, eps=eps, alpha=beta, loss_type=args.attack_loss_type,
             targeted=args.targeted, num_classes=10)
     else: # Get FGSM Attack
-        attacker = attack_util.FGSMAttack(eps=eps, loss_type=args.loss_type, targeted=args.targeted,
+        attacker = attack_util.FGSMAttack(eps=eps, loss_type=args.attack_loss_type, targeted=args.targeted,
             num_classes=10)
     
     # Get trainer object

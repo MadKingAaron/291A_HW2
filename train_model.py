@@ -78,7 +78,7 @@ class ModelTrainer():
         total_size = 0
         clean_correct_num = 0
         robust_correct_num = 0
-        for data, i in enumerate(testloader):
+        for i, data in enumerate(testloader):
             inputs, labels = data
     
             total_size += inputs.size(0)
