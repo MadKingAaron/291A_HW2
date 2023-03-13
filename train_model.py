@@ -80,6 +80,7 @@ class ModelTrainer():
         robust_correct_num = 0
         for i, data in enumerate(testloader):
             inputs, labels = data
+            inputs, labels = inputs.to(self.device), labels.to(self.device)
     
             total_size += inputs.size(0)
 
