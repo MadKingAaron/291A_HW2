@@ -41,6 +41,7 @@ def parse_args():
     parser.add_argument(
         '--data_dir', default='./data/', type=str, help="Folder to store downloaded dataset"
     )
+    parser.add_argument("--checkpt_freq", type=int, default=20, help="Frequency to save model checkpoints")
     parser.add_argument(
         '--save_model', action='store_true'
     )
@@ -50,6 +51,7 @@ def parse_args():
     parser.add_argument(
         '--log_dir', type=str, default='./run/training_log', help="Output directory for TensorBoard"
     )
+    parser.add_argument("--load_checkpoint", type=str, default="", help="(Optional) Load checkpoint dir")
     parser.add_argument("--targeted", action='store_true')
     parser.add_argument("--device", type=str, default="cuda:0", help="Device to use")
     
@@ -62,6 +64,11 @@ def main():
     # Get model and dataset
     train_loader, val_loader, test_loader, norm_layer = data_util.cifar10_dataloader(data_dir=args.data_dir)
     model = get_model(norm_layer)
+
+    if args.load_checkpoint != "":
+        model = model.load(args.load_checkpoint, args.device)
+    
+    model = model.to(args.device)
 
     # Get attacker
     eps = args.eps / 255

@@ -33,7 +33,7 @@ class ModelTrainer():
     def save_model(self, save_dir:str):
         torch.save(self.model.state_dict(), save_dir)
 
-    def train(self, epochs, valloader = None, log_dir:str=None):
+    def train(self, epochs, valloader = None, log_dir:str=None, save_freq:int = 20):
         tb_writer = None
         if log_dir:
             tb_writer = SummaryWriter(log_dir=log_dir)
@@ -65,6 +65,10 @@ class ModelTrainer():
                     tb_writer.add_scalar("Loss/train", epoch_loss, loss)
                     tb_writer.add_scalar("CleanAccuracy/train", clean_accuracy, epoch)
                     tb_writer.add_scalar("RobustAccuracy/train", robust_accuracy, epoch)
+            
+            # Save checkpoint model after save_freq
+            if epoch+1 % save_freq == 0:
+                self.save_model('./checkpoints/checkpoint_{}.pth'.format(epoch+1))
         
         if tb_writer:
             tb_writer.flush()
