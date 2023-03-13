@@ -53,7 +53,7 @@ def parse_args():
     )
     parser.add_argument("--load_checkpoint", type=str, default="", help="(Optional) Load checkpoint dir")
     parser.add_argument("--targeted", action='store_true')
-    parser.add_argument("--device", type=str, default="cuda:0", help="Device to use")
+    parser.add_argument("--device", type=str, default="cpu", help="Device to use")
     
     args = parser.parse_args()
     return args
@@ -87,6 +87,7 @@ def main():
     # Train model
     trainer.train(epochs=args.epochs, valloader=val_loader, log_dir=args.log_dir)
 
-
+if __name__ == "__main__":
+    main()
 
 
