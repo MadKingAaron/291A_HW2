@@ -3,6 +3,19 @@ from torch.utils.data import DataLoader, Subset
 import torch
 from torchvision import transforms
 
+def augment_images(img_batch:torch.Tensor) -> torch.Tensor:
+    toPIL = transforms.ToPILImage()
+    train_transform = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.ColorJitter(),
+        transforms.RandomAffine((-30, 30)),
+        transforms.GaussianBlur(kernel_size=(5, 5)),
+        transforms.ToTensor(),
+    ])
+
+    augBatch = [torch.unsqueeze(train_transform(toPIL(x)), 0) for x in img_batch]
+    
+    return torch.cat(augBatch)
 
 class NormalizeByChannelMeanStd(torch.nn.Module):
     def __init__(self, mean, std):

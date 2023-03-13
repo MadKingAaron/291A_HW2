@@ -7,6 +7,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from tqdm import tqdm
 
+from data_util import augment_images
+
 
 class ModelTrainer():
     def __init__(self, model:Module, adv_gen, trainloader, lr, optimizer, device = 'cpu') -> None:
@@ -41,6 +43,8 @@ class ModelTrainer():
             epoch_loss = 0
             for i, batch in enumerate(self.trainloader):
                 inputs, labels = batch
+                
+                
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
                 self.optimizer.zero_grad()
@@ -98,4 +102,65 @@ class ModelTrainer():
                 robust_correct_num += torch.sum(torch.argmax(predictions, dim = -1) == labels).item()
         
         return clean_correct_num/total_size, robust_correct_num/total_size
-    
+
+
+class TRADESModelTrainer(ModelTrainer):
+    def __init__(self, model: Module, adv_gen, trainloader, lr, optimizer, device='cpu') -> None:
+        super().__init__(model, adv_gen, trainloader, lr, optimizer, device)
+
+    def train(self, epochs, gamma, valloader = None, log_dir:str=None, save_freq:int = 20, semi_supervised:bool = False):
+        tb_writer = None
+        if log_dir:
+            tb_writer = SummaryWriter(log_dir=log_dir)
+        for epoch in tqdm(range(epochs)):
+            epoch_loss = 0
+            for i, batch in enumerate(self.trainloader):
+                inputs, labels = batch
+                if semi_supervised:
+                    aug_inputs = torch.cat((inputs, augment_images(inputs))).to(self.device)
+                
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                
+                self.optimizer.zero_grad()
+                
+                preds = self.model(inputs)
+                if semi_supervised:
+                    pert_preds = self.model(aug_inputs)
+                    pert_inputs = aug_inputs
+
+                else:
+                    pert_preds = preds
+                    pert_inputs = inputs
+
+                delta = self.adv_gen.perturb(self.model, pert_inputs, pert_preds)
+                
+                inputs_hat = pert_inputs + delta
+
+                self.optimizer.zero_grad()
+
+                preds_hat = self.model(inputs_hat)
+
+                loss_hat = self.train_loss(preds_hat, pert_preds)
+                loss_preds = self.train_loss(preds, labels)
+
+                loss = (gamma * loss_preds) + loss_hat
+                epoch_loss += loss.item()
+
+                loss.backward()
+                self.optimizer.step()
+            
+            # Validate model, if valloader provided
+            if valloader:
+                clean_accuracy, robust_accuracy = self.test_model_accuracy(valloader)
+                if tb_writer:
+                    tb_writer.add_scalar("Loss/train", epoch_loss, loss)
+                    tb_writer.add_scalar("CleanAccuracy/train", clean_accuracy, epoch)
+                    tb_writer.add_scalar("RobustAccuracy/train", robust_accuracy, epoch)
+            
+            # Save checkpoint model after save_freq
+            if epoch+1 % save_freq == 0:
+                self.save_model('./checkpoints/checkpoint_{}.pth'.format(epoch+1))
+        
+        if tb_writer:
+            tb_writer.flush()
+            tb_writer.close()
