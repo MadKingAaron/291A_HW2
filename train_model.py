@@ -52,7 +52,7 @@ class ModelTrainer():
 
                 preds = self.model(inputs_hat)
 
-                loss = self.loss_func(preds, labels)
+                loss = self.train_loss(preds, labels)
                 epoch_loss += loss.item()
 
                 loss.backwards()
