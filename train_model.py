@@ -39,8 +39,8 @@ class ModelTrainer():
             tb_writer = SummaryWriter(log_dir=log_dir)
         for epoch in tqdm(range(epochs)):
             epoch_loss = 0
-            for i, data in enumerate(self.trainloader):
-                inputs, labels = data
+            for i, batch in enumerate(self.trainloader):
+                inputs, labels = batch
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
                 self.optimizer.zero_grad()
@@ -78,8 +78,8 @@ class ModelTrainer():
         total_size = 0
         clean_correct_num = 0
         robust_correct_num = 0
-        for i, data in enumerate(testloader):
-            inputs, labels = data
+        for i, batch in enumerate(testloader):
+            inputs, labels = batch
             inputs, labels = inputs.to(self.device), labels.to(self.device)
     
             total_size += inputs.size(0)
@@ -92,7 +92,7 @@ class ModelTrainer():
                 
                 ### robust accuracy
                 # generate perturbation
-                perturbed_data = self.adv_gen.perturb(self.model, data, labels) + inputs
+                perturbed_data = self.adv_gen.perturb(self.model, inputs, labels) + inputs
                 # predict
                 predictions = self.model(perturbed_data)
                 robust_correct_num += torch.sum(torch.argmax(predictions, dim = -1) == labels).item()
