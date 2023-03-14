@@ -1,5 +1,5 @@
 import torch
-from torch.optim import SGD, Adam
+from torch.optim import SGD, Adam, lr_scheduler
 from torch.nn import CrossEntropyLoss, Module
 import attack_util
 from attack_util import ctx_noparamgrad
@@ -31,6 +31,8 @@ class ModelTrainer():
             self.optimizer = SGD(model.parameters(), lr=lr)
         elif optimizer.lower() == 'adam':
             self.optimizer = Adam(model.parameters(), lr=lr)
+        
+        self.scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer)
     
     def save_model(self, save_dir:str):
         torch.save(self.model.state_dict(), save_dir)
@@ -63,17 +65,20 @@ class ModelTrainer():
                 self.optimizer.step()
             
             # Validate model, if valloader provided
+            
             if valloader:
-                clean_accuracy, robust_accuracy = self.test_model_accuracy(valloader)
+                clean_accuracy, robust_accuracy, val_robust_loss = self.test_model_accuracy(valloader)
+                self.scheduler.step(val_robust_loss)
                 if tb_writer:
                     tb_writer.add_scalar("Loss/train", epoch_loss, epoch)
+                    tb_writer.add_scalar("Loss/val_robust", val_robust_loss, epoch)
                     tb_writer.add_scalar("CleanAccuracy/train", clean_accuracy, epoch)
                     tb_writer.add_scalar("RobustAccuracy/train", robust_accuracy, epoch)
             
             # Save checkpoint model after save_freq
-            if epoch+1 % save_freq == 0:
+            if (epoch+1) % save_freq == 0:
                 self.save_model('./checkpoints/checkpoint_{}.pth'.format(epoch+1))
-        
+                
         if tb_writer:
             tb_writer.flush()
             tb_writer.close()
@@ -82,6 +87,7 @@ class ModelTrainer():
         total_size = 0
         clean_correct_num = 0
         robust_correct_num = 0
+        total_robust_val_loss = 0
         for i, batch in enumerate(testloader):
             inputs, labels = batch
             inputs, labels = inputs.to(self.device), labels.to(self.device)
@@ -100,8 +106,13 @@ class ModelTrainer():
                 # predict
                 predictions = self.model(perturbed_data)
                 robust_correct_num += torch.sum(torch.argmax(predictions, dim = -1) == labels).item()
+
+                # Robust loss
+                robust_loss = self.train_loss(predictions, labels).item()
+                total_robust_val_loss += robust_loss
+
         
-        return clean_correct_num/total_size, robust_correct_num/total_size
+        return clean_correct_num/total_size, robust_correct_num/total_size, robust_loss
 
 
 class TRADESModelTrainer(ModelTrainer):
