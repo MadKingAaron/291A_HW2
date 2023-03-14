@@ -94,12 +94,12 @@ def main():
     if args.trades:
         trainer = train_model.TRADESModelTrainer(model, attacker, train_loader, args.lr, args.optimizer, device=args.device)
         # Train model
-        trainer.train(epochs=args.epochs, valloader=val_loader, log_dir=args.log_dir, gamma=args.gamma, semi_supervised=args.unsupervised)
+        trainer.train(epochs=args.epochs, valloader=val_loader, log_dir=args.log_dir, gamma=args.gamma, semi_supervised=args.unsupervised, save_freq=args.checkpt_freq)
     else:
         # Get trainer object
         trainer = train_model.ModelTrainer(model, attacker, train_loader, args.lr, args.optimizer, device=args.device)
         # Train model
-        trainer.train(epochs=args.epochs, valloader=val_loader, log_dir=args.log_dir)
+        trainer.train(epochs=args.epochs, valloader=val_loader, log_dir=args.log_dir, save_freq=args.checkpt_freq)
         
 
     trainer.save_model(args.save_path)
