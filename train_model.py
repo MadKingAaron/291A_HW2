@@ -66,7 +66,7 @@ class ModelTrainer():
             if valloader:
                 clean_accuracy, robust_accuracy = self.test_model_accuracy(valloader)
                 if tb_writer:
-                    tb_writer.add_scalar("Loss/train", epoch_loss, loss)
+                    tb_writer.add_scalar("Loss/train", epoch_loss, epoch)
                     tb_writer.add_scalar("CleanAccuracy/train", clean_accuracy, epoch)
                     tb_writer.add_scalar("RobustAccuracy/train", robust_accuracy, epoch)
             
