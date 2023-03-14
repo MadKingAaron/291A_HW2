@@ -12,6 +12,10 @@ from attack_util import ctx_noparamgrad
 
 from matplotlib import pyplot as plt
 
+def get_model(norm_layer):
+    model = model_util.ResNet18(num_classes=10)
+    model.normalizer = norm_layer
+    return model
 
 def parse_args():
     '''Parse input arguments'''
@@ -35,6 +39,7 @@ def parse_args():
     parser.add_argument(
         '--model_path', default='resnet_cifar10.pth', help='Filepath to the trained model'
     )
+    parser.add_argument("--targeted", action='store_true')
     parser.add_argument("--device", type=str, default="cuda:0", help="Device to use")
 
     args = parser.parse_args()
@@ -42,7 +47,6 @@ def parse_args():
 
 
 def plot_accuracy(standard_acc, standard_vars, robust_acc, x_label, colors=['orange', 'green']):
-
     plt.plot(standard_vars, standard_acc, label='Standard Model', color=colors[0], marker='o')
     plt.plot(standard_vars, robust_acc, label='Robust Model', color=colors[1], marker='o')
 
@@ -57,29 +61,21 @@ def plot_accuracy(standard_acc, standard_vars, robust_acc, x_label, colors=['ora
 def main():
     args = parse_args()
 
-    # Load data
-    test_loader, norm_layer = data_util.cifar10_dataloader(data_dir=args.data_dir)
-    num_classes = 10
-    model = model_util.ResNet18(num_classes=num_classes)
-    model.normalize = norm_layer
-    model.load(args.model_path, args.device)
+    # Get model and dataset
+    train_loader, val_loader, test_loader, norm_layer = data_util.cifar10_dataloader(data_dir=args.data_dir)
+    model = get_model(norm_layer)
+
+    if args.load_checkpoint != "":
+        model = model.load(args.load_checkpoint, args.device)
+
     model = model.to(args.device)
 
     eps = args.eps / 255
     alpha = args.alpha / 255
 
-    attack_steps = [1, 5, 10, 20, 50]
-    epsilons = [1 / 255, 2 / 255, 4 / 255, 6 / 255, 8 / 255]
-    # for attack_step in attack_steps:
-    # for eps in epsilons:
-
-    ### Your code here for creating the attacker object
-    # Note that FGSM attack is a special case of PGD attack with specific hyper-parameters
-    # You can also implement a separate FGSM class if you want
     attacker = attack_util.PGDAttack(
-        attack_step=args.attack_step, eps=eps, alpha=alpha, loss_type=args.loss_type,
-        targeted=args.targeted, num_classes=num_classes)
-    ### Your code ends
+        attack_step=args.attack_step, eps=eps, alpha=alpha, loss_type=args.attack_loss_type,
+        targeted=args.targeted, num_classes=10)
 
     total = 0
     clean_correct_num = 0
@@ -88,21 +84,10 @@ def main():
 
     ## Make sure the model is in `eval` mode.
     model.eval()
-    print("***********************************")
-    print("total batches : ", len(test_loader.dataset))
-    print("loss func : ", args.loss_type)
-    print("targeted : ", args.targeted)
-    print("epsilon : ", args.eps)
-    print("alpha : ", args.alpha)
-    print("attack_step : ", args.attack_step)
-    print("***********************************")
     sample_no = 0
 
     for data, labels in tqdm(test_loader):
-        # data: => [n, 3, 32, 32]
-        # labels => [n]
         sample_no += 1
-        # print("sample # : ", sample_no)
 
         data = data.to(args.device)
         labels = labels.to(args.device)
@@ -138,6 +123,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # plot_accuracy([0.5569, 0.0072, 0.0001, 0.0, 0.0], [1, 5, 10, 20, 50], [0.762, 0.5433, 0.5273, 0.5216, 0.5205], 'T')
-    # plot_accuracy([0.6016, 0.1172, 0.0068, 0.0008, 0.0001], ['1/255', '2/255', '4/255', '6/255', '8/255'],
-    #               [0.7914, 0.7609, 0.6911, 0.6116, 0.5273], 'ϵ', colors=['red', 'blue'])
