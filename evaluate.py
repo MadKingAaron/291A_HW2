@@ -81,13 +81,13 @@ def main():
     # Get attacker
     eps = args.eps / 255
     beta = args.beta / 255
-    if args.attack_step > 1:
-        attacker = attack_util.PGDAttack(
-            attack_step=args.attack_step, eps=eps, alpha=beta, loss_type=args.attack_loss_type,
-            targeted=args.targeted, num_classes=10)
-    else: # Get FGSM Attack
-        attacker = attack_util.FGSMAttack(eps=eps, loss_type=args.attack_loss_type, targeted=args.targeted,
-            num_classes=10)
+    #if True:#args.attack_step > 1:
+    attacker = attack_util.PGDAttack(
+        attack_step=args.attack_step, eps=eps, alpha=beta, loss_type=args.attack_loss_type,
+        targeted=args.targeted, num_classes=10)
+    #else: # Get FGSM Attack
+    #    attacker = attack_util.FGSMAttack(eps=eps, loss_type=args.attack_loss_type, targeted=args.targeted,
+    #        num_classes=10)
     
 
 
