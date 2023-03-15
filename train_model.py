@@ -35,7 +35,7 @@ class ModelTrainer():
         self.scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer)
     
     def save_model(self, save_dir:str):
-        torch.save(self.model.state_dict(), save_dir)
+        self.model.save(save_dir)
 
     def train(self, epochs, valloader = None, log_dir:str=None, save_freq:int = 20):
         tb_writer = None
