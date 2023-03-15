@@ -78,11 +78,15 @@ class PGDAttack():
 
     def cw_loss(self, logits, y):
         ### Your code here
+        y_dev = 'cpu' if y.get_device() < 0 else y.get_device()
         if self.targeted:
             old_y = y
             y = torch.ones_like(old_y) * self.targeted_class
-
-        one_hot_labels = torch.eye(len(logits[0]))[y]
+            y = y.to(y_dev)
+        
+        #print("Logits Device:",logits.get_device())
+        one_hot = torch.eye(len(logits[0])).to(y_dev)
+        one_hot_labels = one_hot[y]
         largest, _ = torch.max((1-one_hot_labels)*logits, dim=1) # Largest
         second = torch.masked_select(logits, one_hot_labels.bool()) # get the second largest 
 
