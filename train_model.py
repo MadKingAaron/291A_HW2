@@ -169,7 +169,7 @@ class TRADESModelTrainer(ModelTrainer):
                     tb_writer.add_scalar("RobustAccuracy/train", robust_accuracy, epoch)
             
             # Save checkpoint model after save_freq
-            if epoch+1 % save_freq == 0:
+            if (epoch+1) % save_freq == 0:
                 self.save_model('./checkpoints/checkpoint_{}.pth'.format(epoch+1))
         
         if tb_writer:
