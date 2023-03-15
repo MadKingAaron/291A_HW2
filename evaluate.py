@@ -66,7 +66,7 @@ def main():
     model = get_model(norm_layer)
     #args.model_path = "./checkpoints/checkpoint_100.pth"
     if args.model_path != "":
-       model.load(args.model_path, args.device)
+       model.load(args.model_path, 'cpu')
 
     model = model.to(args.device)
 
@@ -74,7 +74,7 @@ def main():
     alpha = args.alpha / 255
 
     attacker = attack_util.PGDAttack(
-        attack_step=args.attack_step, eps=eps, alpha=alpha, loss_type=args.attack_loss_type,
+        attack_step=args.attack_step, eps=eps, alpha=alpha, loss_type=args.loss_type,
         targeted=args.targeted, num_classes=10)
 
     total = 0

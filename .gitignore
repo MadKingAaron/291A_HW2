@@ -156,3 +156,4 @@ cython_debug/
 /data
 /runs
 *.pth
+main_tester.py
