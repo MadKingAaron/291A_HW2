@@ -64,9 +64,9 @@ def main():
     # Get model and dataset
     train_loader, val_loader, test_loader, norm_layer = data_util.cifar10_dataloader(data_dir=args.data_dir)
     model = get_model(norm_layer)
-
-    if args.load_checkpoint != "":
-        model = model.load(args.load_checkpoint, args.device)
+    #args.model_path = "./checkpoints/checkpoint_100.pth"
+    if args.model_path != "":
+       model.load(args.model_path, args.device)
 
     model = model.to(args.device)
 
