@@ -162,9 +162,11 @@ class TRADESModelTrainer(ModelTrainer):
             
             # Validate model, if valloader provided
             if valloader:
-                clean_accuracy, robust_accuracy = self.test_model_accuracy(valloader)
+                clean_accuracy, robust_accuracy, val_robust_loss = self.test_model_accuracy(valloader)
+                self.scheduler.step(val_robust_loss)
                 if tb_writer:
-                    tb_writer.add_scalar("Loss/train", epoch_loss, loss)
+                    tb_writer.add_scalar("Loss/train", epoch_loss, epoch)
+                    tb_writer.add_scalar("Loss/val_robust", val_robust_loss, epoch)
                     tb_writer.add_scalar("CleanAccuracy/train", clean_accuracy, epoch)
                     tb_writer.add_scalar("RobustAccuracy/train", robust_accuracy, epoch)
             
